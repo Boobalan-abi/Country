@@ -1,0 +1,63 @@
+name: Build and deploy ASP.Net Core app to Azure Web App - CountryWeb
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore ./Country.Web/Country.Web.csproj
+
+      - name: Build
+        run: dotnet build ./Country.Web/Country.Web.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish ./Country.Web/Country.Web.csproj -c Release -o ./publish --no-build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: countryweb
+          path: ./publish
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: countryweb
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C95643CAF93446ADA0E8BADF4B875914 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D6C959CD146744FA960A3492D39079C3 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_74C05222CDCB491FAA3D82A22C6BFB32 }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'CountryWeb'
+          slot-name: 'Production'
+          package: .
