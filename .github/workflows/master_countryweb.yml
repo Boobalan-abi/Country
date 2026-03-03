@@ -9,32 +9,24 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read
 
     steps:
-      # Checkout repo
       - uses: actions/checkout@v4
 
-      # Setup .NET 8
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      # Restore packages
       - name: Restore
         run: dotnet restore ./Country.Web/Country.Web.csproj
 
-      # Build project
       - name: Build
         run: dotnet build ./Country.Web/Country.Web.csproj --configuration Release --no-restore
 
-      # Publish to a dedicated folder for Azure deployment
       - name: Publish
         run: dotnet publish ./Country.Web/Country.Web.csproj -c Release -o ./publish --no-build
 
-      # Upload artifact for deploy job
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -49,21 +41,16 @@ jobs:
       contents: read
 
     steps:
-      # Download artifact from build job
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: countryweb
 
-      # Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C95643CAF93446ADA0E8BADF4B875914 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_D6C959CD146744FA960A3492D39079C3 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_74C05222CDCB491FAA3D82A22C6BFB32 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Deploy to Azure Web App using the publish folder (zip deployment)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
