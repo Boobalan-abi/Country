@@ -2,8 +2,6 @@
 using Country.MVC.Services;
 using Country.Web.Service;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Net.Http;
 
 namespace Country.MVC.Controllers
 {
@@ -20,14 +18,24 @@ namespace Country.MVC.Controllers
         public async Task<IActionResult> Index()
         {
             var countries = await _service.GetAllAsync();
+            if (countries == null || !countries.Any())
+            {
+                ViewBag.ErrorMessage = "No countries found or unable to fetch data.";
+                countries = new List<CountryViewModel>();
+            }
             return View(countries);
         }
 
-
+        // GET: Country/Details/5
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var country = await _service.GetByIdAsync(id);
+            if (country == null)
+            {
+                TempData["ErrorMessage"] = $"Country with Id {id} not found.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var model = new CountryViewModel
             {
@@ -41,19 +49,22 @@ namespace Country.MVC.Controllers
         }
 
         // GET: Country/Create
-        public IActionResult Create()
-        {
-            return View();
-        }
+        public IActionResult Create() => View();
 
         // POST: Country/Create
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateCountryViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            await _service.CreateAsync(model);
+            var success = await _service.CreateAsync(model);
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, "Unable to create country. Try again later.");
+                return View(model);
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -62,6 +73,11 @@ namespace Country.MVC.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var country = await _service.GetByIdAsync(id);
+            if (country == null)
+            {
+                TempData["ErrorMessage"] = $"Country with Id {id} not found.";
+                return RedirectToAction(nameof(Index));
+            }
 
             var model = new UpdateCountryViewModel
             {
@@ -76,12 +92,18 @@ namespace Country.MVC.Controllers
 
         // POST: Country/Edit
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(UpdateCountryViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
 
-            await _service.UpdateAsync(model);
+            var success = await _service.UpdateAsync(model);
+            if (!success)
+            {
+                ModelState.AddModelError(string.Empty, "Unable to update country. Try again later.");
+                return View(model);
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -89,7 +111,12 @@ namespace Country.MVC.Controllers
         // GET: Country/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteAsync(id);
+            var success = await _service.DeleteAsync(id);
+            if (!success)
+            {
+                TempData["ErrorMessage"] = $"Unable to delete country with Id {id}. Try again later.";
+            }
+
             return RedirectToAction(nameof(Index));
         }
     }
