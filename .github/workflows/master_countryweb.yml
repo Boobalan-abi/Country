@@ -56,4 +56,5 @@ jobs:
         with:
           app-name: 'CountryWeb'
           slot-name: 'Production'
-          package: ./publish
+          package: ./Country.Web/publish
+
