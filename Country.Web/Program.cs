@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Country.MVC.Services;
 using Country.Web.Service;
 
@@ -7,48 +9,59 @@ namespace Country.Web
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
-
-            // Add services to the container.
-            builder.Services.AddControllersWithViews();
-
-            #region HttpClient and BaseAddress Configuration
-
-            builder.Services.AddHttpClient("ApiClient", client =>
+            try
             {
-                client.BaseAddress = new Uri("https://countryapi.azurewebsites.net/api/");
-            });
+                var builder = WebApplication.CreateBuilder(args);
 
-            #endregion
+                // Add services to the container.
+                builder.Services.AddControllersWithViews();
 
-            #region Country, State, City Services Registration
+                #region HttpClient and BaseAddress Configuration
+                builder.Services.AddHttpClient("ApiClient", client =>
+                {
+                    client.BaseAddress = new Uri("https://countryapi.azurewebsites.net/api/");
+                });
+                #endregion
 
-            builder.Services.AddScoped<ICountryService, CountryService>();
+                #region Country, State, City Services Registration
+                builder.Services.AddScoped<ICountryService, CountryService>();
+                builder.Services.AddScoped<IStateService, StateService>();
+                #endregion
 
-            #endregion
+                var app = builder.Build();
 
-            var app = builder.Build();
+                // Configure the HTTP request pipeline.
+                if (!app.Environment.IsDevelopment())
+                {
+                    app.UseExceptionHandler("/Home/Error");
+                    app.UseHsts();
+                }
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                app.UseHttpsRedirection();
+                app.UseStaticFiles();
+
+                app.UseRouting();
+
+                app.UseAuthorization();
+
+                app.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Country}/{action=Index}/{id?}");
+
+                app.Run();
             }
+            catch (Exception ex)
+            {
+                // Log to a file so we can see it in Kudu or App Service logs
+                var logFile = Path.Combine(AppContext.BaseDirectory, "startup-error.txt");
+                File.WriteAllText(logFile, ex.ToString());
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+                // Optionally, also log to console
+                Console.WriteLine(ex);
 
-            app.UseRouting();
-             
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Country}/{action=Index}/{id?}");
-            //Boobalan
-            app.Run();
+                // Rethrow so the web host fails visibly
+                throw;
+            }
         }
     }
 }
