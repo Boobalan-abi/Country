@@ -1,3 +1,4 @@
+using Country.API.AutoMapper;
 using Country.API.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,11 @@ namespace Country.API
             });
             #endregion
 
+            #region AutoMapper Configuration
+            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            #endregion
+
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -35,6 +41,7 @@ namespace Country.API
             }
 
             #endregion
+
 
 
             // Configure the HTTP request pipeline.
