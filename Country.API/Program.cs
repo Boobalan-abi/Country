@@ -1,5 +1,7 @@
 using Country.API.AutoMapper;
 using Country.API.Data;
+using Country.API.Repository.Implementations;
+using Country.API.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Country.API
@@ -25,6 +27,11 @@ namespace Country.API
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             #endregion
 
+            #region GenericRepository Configuration
+
+            builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            #endregion
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
