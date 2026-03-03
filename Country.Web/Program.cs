@@ -16,7 +16,7 @@ namespace Country.Web
 
             builder.Services.AddHttpClient("ApiClient", client =>
             {
-                client.BaseAddress = new Uri("https://localhost:7263/api/");
+                client.BaseAddress = new Uri("https://countryapi.azurewebsites.net/api/");
             });
 
             #endregion

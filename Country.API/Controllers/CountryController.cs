@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Country.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[Controller]")]
     [ApiController]
     public class CountryController : ControllerBase
     {
