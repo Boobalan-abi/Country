@@ -41,13 +41,13 @@ namespace Country.Web
             app.UseStaticFiles();
 
             app.UseRouting();
-
+             
             app.UseAuthorization();
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Country}/{action=Index}/{id?}");
-
+            //Boobalan
             app.Run();
         }
     }
