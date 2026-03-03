@@ -9,24 +9,33 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
+      # 1️⃣ Checkout the repository
       - uses: actions/checkout@v4
 
+      # 2️⃣ Setup .NET 8 SDK
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      # 3️⃣ Restore NuGet packages
       - name: Restore
         run: dotnet restore ./Country.Web/Country.Web.csproj
 
+      # 4️⃣ Build project
       - name: Build
-        run: dotnet build ./Country.Web/Country.Web.csproj --configuration Release --no-restore
+        run: dotnet build ./Country.Web/Country.Web.csproj -c Release --no-restore
 
+      # 5️⃣ Publish project to folder
       - name: Publish
-        run: dotnet publish ./Country.Web/Country.Web.csproj -c Release -o ./Country.Web/publish --no-build
+        run: dotnet publish ./Country.Web/Country.Web.csproj -c Release -o ./publish --no-build
 
+      # 6️⃣ Verify publish folder
+      - name: List publish folder
+        run: dir ./publish
+
+      # 7️⃣ Upload published folder as artifact
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -36,26 +45,30 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
-    permissions:
-      id-token: write
-      contents: read
-
     steps:
+      # 1️⃣ Download artifact
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: countryweb
+          path: ./publish_artifact
 
+      # 2️⃣ Verify downloaded artifact
+      - name: List downloaded artifact
+        run: dir ./publish_artifact
+
+      # 3️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
+      # 4️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'CountryWeb'
           slot-name: 'Production'
-          package: ./Country.Web/publish
-
-
+          package: ./publish_artifact
