@@ -1,3 +1,6 @@
+using Country.MVC.Services;
+using Country.Web.Service;
+
 namespace Country.Web
 {
     public class Program
@@ -8,6 +11,21 @@ namespace Country.Web
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            #region HttpClient and BaseAddress Configuration
+
+            builder.Services.AddHttpClient("ApiClient", client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7263/api/");
+            });
+
+            #endregion
+
+            #region Country, State, City Services Registration
+
+            builder.Services.AddScoped<ICountryService, CountryService>();
+
+            #endregion
 
             var app = builder.Build();
 
@@ -28,7 +46,7 @@ namespace Country.Web
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
+                pattern: "{controller=Country}/{action=Index}/{id?}");
 
             app.Run();
         }
